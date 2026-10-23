@@ -7,14 +7,32 @@ const allowedCategories = new Set([
   "Other gospel talent"
 ]);
 
+// Netlify.env.get() is the preferred API for modern Netlify Functions.
+// process.env is a compatible fallback for Node runtimes where the global
+// Netlify environment accessor is not available or does not return a value.
+function readEnv(name: string): string | undefined {
+  try {
+    const value = typeof Netlify !== "undefined" ? Netlify.env.get(name) : undefined;
+    if (value) return value;
+  } catch {
+    // Fall through to Node's runtime environment.
+  }
+  return process.env[name];
+}
+
 export default async (request, context) => {
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed." }, { status: 405, headers: { Allow: "POST" } });
   }
 
-  const supabaseUrl = Netlify.env.get("SUPABASE_URL");
-  const serviceRoleKey = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const supabaseUrl = readEnv("SUPABASE_URL");
+  const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceRoleKey) {
+    // Log presence only; never log the secret values.
+    console.error("Registration configuration missing", {
+      supabaseUrlPresent: Boolean(supabaseUrl),
+      serviceRoleKeyPresent: Boolean(serviceRoleKey)
+    });
     return Response.json({ error: "Registration is temporarily unavailable. Please contact the event team on WhatsApp." }, { status: 503 });
   }
 
@@ -30,7 +48,7 @@ export default async (request, context) => {
   const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 1000) : "";
 
   if (!entryType || fullName.length < 2 || fullName.length > 120 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
+      !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254 ||
       phone.length < 7 || phone.length > 30 || !allowedCategories.has(category)) {
     return Response.json({ error: "Check your name, email, phone number, entry type and talent category, then try again." }, { status: 400 });
   }

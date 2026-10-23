@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 const allowedCategories = new Set([
   "Vocalist / Singer", "Gospel rapper", "Afro-gospel artist",
   "Instrumentalist", "Spoken-word artist", "Gospel dance group",
-  "Gospel drama / theatre", "Drama / Theatre", "Choir / Vocal group",
+  "Gospel drama / theatre", "Drama / Theatre", "Choir / vocal group",
   "Other gospel talent"
 ]);
 

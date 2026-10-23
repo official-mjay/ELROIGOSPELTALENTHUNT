@@ -40,7 +40,8 @@ export default function App() {
       setRegistrationReference(result.reference);
       setMessage('Registration saved. Your status is PENDING PAYMENT. Transfer the fee to the bank account shown below, then send your receipt and reference to the organizers on WhatsApp. Your payment will remain unconfirmed until the organizer checks it.');
     } catch (err) {
-      setMessage('Online registration is not activated yet. You can still register by contacting the organizers on WhatsApp. Your details have not been saved online.');
+      const detail = err instanceof Error ? err.message : '';
+      setMessage(detail || 'We could not reach the registration service. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

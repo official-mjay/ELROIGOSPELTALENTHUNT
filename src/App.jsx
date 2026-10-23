@@ -20,27 +20,30 @@ export default function App() {
   const [message,setMessage] = useState('');
   const [voter,setVoter] = useState('');
   const [loading,setLoading] = useState(false);
+  const [registrationReference,setRegistrationReference] = useState('');
   const shown = useMemo(()=>filter==='All'?contestants:contestants.filter(c=>c.category===filter),[filter]);
   const fee = entry==='Group'?'₦10,000':'₦3,000';
 
   async function submitRegistration(e) {
-    e.preventDefault(); setMessage('');
-    if (!isBackendConfigured || !supabase) {
-      setMessage('Registration is not connected yet. Please contact the event team on WhatsApp for current registration instructions.');
-      return;
-    }
+    e.preventDefault();
+    setMessage('');
+    setRegistrationReference('');
     setLoading(true);
     try {
-      const reference = 'EGTH-'+Date.now().toString(36).toUpperCase();
-      const {error} = await supabase.from('registrations').insert({
-        registration_reference:reference, entry_type:entry.toLowerCase(), full_name:form.name.trim(),
-        email:form.email.trim().toLowerCase(), phone:form.phone.trim(), category:form.category,
-        notes:form.notes.trim() || null, fee_amount:entry==='Group'?10000:3000, payment_status:'pending_payment'
+      const response = await fetch('/.netlify/functions/create-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryType: entry, ...form })
       });
-      if (error) throw error;
-      setMessage('Registration request received. Reference: '+reference+'. Please pay the displayed fee and send your receipt to the event team for manual review.');
-    } catch (err) { setMessage(err?.message || 'We could not submit the registration. Please try again later.'); }
-    finally { setLoading(false); }
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'We could not submit your registration. Please try again.');
+      setRegistrationReference(result.reference);
+      setMessage('Registration saved. Your status is PENDING PAYMENT. Transfer the fee to the bank account shown below, then send your receipt and reference to the organizers on WhatsApp. Your payment will remain unconfirmed until the organizer checks it.');
+    } catch (err) {
+      setMessage(err?.message || 'We could not submit the registration. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function requestVote(e) {
@@ -66,6 +69,7 @@ export default function App() {
       {modal==='profile' && <><div className="eyebrow">Contestant profile · sample</div><h2>{message}</h2><p>This profile is sample content. Approved contestant biographies, photos, contestant numbers and verified vote totals will appear here after the organizer publishes them.</p></>}
       {modal==='vote' && <><div className="eyebrow">Free voting</div><h2>Support {message || 'your favourite contestant'}</h2><p>Voting is free. One vote per verified person. No vote has been cast from this preview.</p><form onSubmit={requestVote}><label>Email or mobile number<input required value={voter} onChange={e=>setVoter(e.target.value)} placeholder="Enter email or phone number"/></label><button className="btn full">Continue to verification</button></form></>}
       {message && modal==='register' && <p className="notice" role="status">{message}</p>}
+      {registrationReference && modal==='register' && <div className="payment-next-step"><p><strong>Registration reference: {registrationReference}</strong></p><p>Bank: Wema Bank<br/>Account name: K-S ADEGBE NIG LTD<br/>Account number: 0125731531<br/>Fee: {fee}</p><a className="btn full" href={`https://wa.me/2347039558747?text=${encodeURIComponent(`Hello El-Roi Gospel Talent Hunt team. I have paid my registration fee. Reference: ${registrationReference}. Name: ${form.name}. Entry: ${entry}. Category: ${form.category}. Please confirm my payment.`)}`} target="_blank" rel="noreferrer">Send receipt on WhatsApp ↗</a></div>}
       {message && modal==='vote' && <p className="notice" role="status">{message}</p>}
     </div></div>}
   </main>;

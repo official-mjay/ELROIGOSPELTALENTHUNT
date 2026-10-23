@@ -48,7 +48,7 @@ export default async (request, context) => {
   const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 1000) : "";
 
   if (!entryType || fullName.length < 2 || fullName.length > 120 ||
-      !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
       phone.length < 7 || phone.length > 30 || !allowedCategories.has(category)) {
     return Response.json({ error: "Check your name, email, phone number, entry type and talent category, then try again." }, { status: 400 });
   }

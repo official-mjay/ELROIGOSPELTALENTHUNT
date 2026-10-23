@@ -47,10 +47,20 @@ export default async (request, context) => {
   const category = typeof body.category === "string" ? body.category.trim() : "";
   const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 1000) : "";
 
-  if (!entryType || fullName.length < 2 || fullName.length > 120 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
-      phone.length < 7 || phone.length > 30 || !allowedCategories.has(category)) {
-    return Response.json({ error: "Check your name, email, phone number, entry type and talent category, then try again." }, { status: 400 });
+  if (!entryType) {
+    return Response.json({ error: "Please choose Individual or Group registration." }, { status: 400 });
+  }
+  if (fullName.length < 2 || fullName.length > 120) {
+    return Response.json({ error: "Please enter a name between 2 and 120 characters." }, { status: 400 });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return Response.json({ error: "Please enter a valid email address." }, { status: 400 });
+  }
+  if (phone.length < 7 || phone.length > 30) {
+    return Response.json({ error: "Please enter a valid phone number, including the country code if applicable." }, { status: 400 });
+  }
+  if (!allowedCategories.has(category)) {
+    return Response.json({ error: "Please select a valid talent category from the list." }, { status: 400 });
   }
 
   const reference = "EGTH-" + randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase();
@@ -79,8 +89,12 @@ export default async (request, context) => {
     });
     if (!response.ok) {
       const detail = await response.text();
-      console.error("Registration insert failed", response.status, detail.slice(0, 300));
-      return Response.json({ error: "We could not save your registration right now. Please try again later." }, { status: 502 });
+      console.error("Registration insert failed", response.status, detail.slice(0, 500));
+      let code = "unknown";
+      try { code = JSON.parse(detail).code || "unknown"; } catch {}
+      return Response.json({
+        error: "The registration database rejected the submission (HTTP " + response.status + ", code " + code + "). No registration was saved. Please try again later."
+      }, { status: 502 });
     }
     return Response.json({
       reference,

@@ -14,6 +14,8 @@ Website project for the El-Roi Gospel Talent Hunt Season 3 event. The public int
 
 The frontend scaffold is committed, but it is **not a live registration or voting system yet**. Before launch, configure a Supabase project, apply the database schema and row-level security policies, configure email delivery and storage, then test admin/contestant permissions. Never put a Supabase service-role key in browser code.
 
+For the Netlify registration function, `SUPABASE_URL` must be the full Supabase project URL (for example, `https://your-project.supabase.co`), not a publishable key. Configure `SUPABASE_SERVICE_ROLE_KEY` as a server-side Netlify environment variable only. Redeploy after changing function environment variables.
+
 ## Event settings currently supplied
 
 - Registration: individual ₦3,000; group ₦10,000

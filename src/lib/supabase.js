@@ -1,6 +1,13 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-export const isBackendConfigured = Boolean(url && key && !url.includes('YOUR_PROJECT'));
-export const supabase = isBackendConfigured ? createClient(url, key) : null;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+export const isBackendConfigured = Boolean(
+  url && key && !url.includes('YOUR_PROJECT')
+);
+
+export const supabase = isBackendConfigured
+  ? createClient(url, key)
+  : null;
